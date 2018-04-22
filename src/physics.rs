@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::{Ref, RefCell};
 use std::borrow::Borrow;
 
-use nalgebra::{Point2, Translation2, Vector2};
+use nalgebra::{normalize, Point2, Translation2, Vector2};
 use ncollide::shape::{Ball, Cuboid, Shape2};
 use ncollide::query::{Ray, RayCast};
 use nphysics2d::world::World;
@@ -99,30 +99,41 @@ impl Physics {
         });
     }
 
-    fn draw_rays(&mut self, mouse_position: &Vector2<f64>, context: &Context, gl: &mut GlGraphics) {
-        let ray = Ray::new(self.player.position(), *mouse_position);
+    // returns a vector pointing from a towards b (of unit length)
+    fn normal_difference(a_x: f64, a_y: f64, b_x: f64, b_y: f64) -> Vector2<f64> {
+        let x = b_x - a_x;
+        let y = b_y - a_y;
+        let norm = (x * x + y * y).sqrt();
+        Vector2::new(x / norm, y / norm)
+    }
+
+    fn draw_rays(&mut self, mouse_pos: &Vector2<f64>, context: &Context, gl: &mut GlGraphics) {
+        let player_pos = self.player.position();
+        let ray_dir = Physics::normal_difference(player_pos[0], player_pos[1], mouse_pos[0], mouse_pos[1]);
+        let ray = Ray::new(player_pos, ray_dir);
         for body in self.world.rigid_bodies() {
             let body = &*Physics::borrow_handle(body);
             let shape = body.shape().as_ref();
             let transform = body.position();
-            //if shape.intersects_ray(transform, &ray) {
-            // physics points are center
-            let physics_pos = transform * Point2::new(1.0, 1.0);
+            if shape.intersects_ray(transform, &ray) {
+                // physics points are center
+                let physics_pos = transform * Point2::new(1.0, 1.0);
 
-            // convert the physics rectangle into a graphics rectangle
-            let rect = match Shape2::as_shape::<Cuboid<Vector2<f64>>>(shape) {
-                Some(v) => v,
-                None => continue,
-            };
-            let rect_size: Vector2<f64> = *rect.half_extents();
-            let half_width = rect_size[0];
-            let half_height = rect_size[1];
-            let graphics_shape = [0.0, 0.0, 2.0 * half_width, 2.0 * half_height];
-            // graphics points are top left
-            let graphics_transform = context
-                .transform
-                .trans(physics_pos.x - half_width, physics_pos.y - half_height);
-            rectangle(RED, graphics_shape, graphics_transform, gl);
+                // convert the physics rectangle into a graphics rectangle
+                let rect = match Shape2::as_shape::<Cuboid<Vector2<f64>>>(shape) {
+                    Some(v) => v,
+                    None => continue,
+                };
+                let rect_size: Vector2<f64> = *rect.half_extents();
+                let half_width = rect_size[0];
+                let half_height = rect_size[1];
+                let graphics_shape = [0.0, 0.0, 2.0 * half_width, 2.0 * half_height];
+                // graphics points are top left
+                let graphics_transform = context
+                    .transform
+                    .trans(physics_pos.x - half_width, physics_pos.y - half_height);
+                rectangle(RED, graphics_shape, graphics_transform, gl);
+            }
         }
     }
 
