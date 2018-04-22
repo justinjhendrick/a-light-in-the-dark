@@ -78,8 +78,8 @@ fn main() {
 
     // Create an Glutin window.
     let mut window: Window = WindowSettings::new(
-            "spinning-square",
-            [200, 200]
+            "A Light in the Dark",
+            [physics::WIDTH as u32, physics::HEIGHT as u32]
         )
         .opengl(opengl)
         .exit_on_esc(true)
