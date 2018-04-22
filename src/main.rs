@@ -24,6 +24,8 @@ mod draw;
 pub struct App {
     gl: GlGraphics,
     down_keys: HashSet<Key>,
+    cursor_x: f64,
+    cursor_y: f64,
     physics: Physics,
 }
 
@@ -43,7 +45,7 @@ impl App {
         self.gl.draw(args.viewport(), |_context, gl| {
             clear(BLACK, gl);
         });
-        self.physics.draw(&args.viewport(), &mut self.gl);
+        self.physics.draw(&args.viewport(), &mut self.gl, self.cursor_x, self.cursor_y);
     }
 
     fn update(&mut self, args: &UpdateArgs) {
@@ -95,5 +97,9 @@ fn main() {
             Event::Loop(Loop::Render(args)) => app.render(&args),
             _ => (),
         }
+        e.mouse_cursor(|x, y| {
+            cursor_x = x;
+            cursor_y = y;
+        });
     }
 }

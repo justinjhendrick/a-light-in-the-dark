@@ -90,12 +90,12 @@ impl Physics {
         self.world.step(dt);
     }
 
-    pub fn draw(&mut self, viewport: &Viewport, gl: &mut GlGraphics) {
+    pub fn draw(&mut self, viewport: &Viewport, gl: &mut GlGraphics, cursor_x: f64, cursor_y: f64) {
         gl.draw(*viewport, |context, ref mut gl| {
             self.player.draw(&context, gl);
 
             let mouse_position = Vector2::new(WIDTH / 2.0, HEIGHT / 2.0);
-            self.draw_rays(&mouse_position, &context, gl);
+            self.draw_rays(&context, gl, cursor_x, cursor_y);
         });
     }
 
@@ -107,9 +107,9 @@ impl Physics {
         Vector2::new(x / norm, y / norm)
     }
 
-    fn draw_rays(&mut self, mouse_pos: &Vector2<f64>, context: &Context, gl: &mut GlGraphics) {
+    fn draw_rays(&mut self, context: &Context, gl: &mut GlGraphics, cursor_x: f64, cursor_y: f64) {
         let player_pos = self.player.position();
-        let ray_dir = Physics::normal_difference(player_pos[0], player_pos[1], mouse_pos[0], mouse_pos[1]);
+        let ray_dir = Physics::normal_difference(player_pos[0], player_pos[1], cursor_x, cursor_y);
         let ray = Ray::new(player_pos, ray_dir);
         for body in self.world.rigid_bodies() {
             let body = &*Physics::borrow_handle(body);
