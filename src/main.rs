@@ -2,10 +2,10 @@ extern crate nalgebra;
 extern crate ncollide;
 extern crate nphysics2d;
 
-extern crate piston;
-extern crate graphics;
 extern crate glutin_window;
+extern crate graphics;
 extern crate opengl_graphics;
+extern crate piston;
 
 use std::collections::HashSet;
 
@@ -13,7 +13,7 @@ use piston::window::WindowSettings;
 use piston::event_loop::*;
 use piston::input::*;
 use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{ GlGraphics, OpenGL };
+use opengl_graphics::{GlGraphics, OpenGL};
 use graphics::color::BLACK;
 
 mod player;
@@ -21,19 +21,18 @@ mod physics;
 use physics::Physics;
 mod draw;
 
-
 pub struct App {
     gl: GlGraphics,
-    down_keys : HashSet<Key>,
-    physics : Physics,
+    down_keys: HashSet<Key>,
+    physics: Physics,
 }
 
 impl App {
-    fn new(gl : GlGraphics) -> App {
+    fn new(gl: GlGraphics) -> App {
         App {
             gl,
-            down_keys : HashSet::new(),
-            physics : Physics::new(),
+            down_keys: HashSet::new(),
+            physics: Physics::new(),
         }
     }
 
@@ -50,7 +49,7 @@ impl App {
     fn update(&mut self, args: &UpdateArgs) {
         let dt = args.dt;
         let mut jump = false;
-        let mut dx : f64 = 0.0;
+        let mut dx: f64 = 0.0;
         for &key in &self.down_keys {
             match key {
                 Key::A => dx -= 1.0,
@@ -78,10 +77,9 @@ fn main() {
 
     // Create an Glutin window.
     let mut window: Window = WindowSettings::new(
-            "A Light in the Dark",
-            [physics::WIDTH as u32, physics::HEIGHT as u32]
-        )
-        .opengl(opengl)
+        "A Light in the Dark",
+        [physics::WIDTH as u32, physics::HEIGHT as u32],
+    ).opengl(opengl)
         .exit_on_esc(true)
         .build()
         .unwrap();
