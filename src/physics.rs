@@ -1,8 +1,4 @@
-use std::rc::Rc;
-use std::any::Any;
-use std::borrow::Borrow;
-
-use nalgebra::{Vector2, Translation2, Point2};
+use nalgebra::{Vector2, Translation2};
 use ncollide::shape::{Ball, Plane};
 use nphysics2d::world::World;
 use nphysics2d::object::RigidBody;
@@ -11,10 +7,10 @@ use opengl_graphics::GlGraphics;
 use graphics::Viewport;
 
 use player::Player;
-use draw::Draw;
 
 pub struct Physics {
     world : World<f64>,
+    player : Player
 }
 
 impl Physics {
@@ -22,9 +18,10 @@ impl Physics {
         let mut world = World::new();
         world.set_gravity(Vector2::new(0.0, 9.81));
         Physics::add_static_bodies(&mut world);
-        Physics::add_player(&mut world);
+        let player = Physics::add_player(&mut world);
         Physics {
             world,
+            player,
         }
     }
 
@@ -50,7 +47,7 @@ impl Physics {
         world.add_rigid_body(floor);
     }
 
-    fn add_player(world : &mut World<f64>) {
+    fn add_player(world : &mut World<f64>) -> Player {
         let init_x = 0.0;
         let init_y = 0.0;
         let shape = Ball::new(2.5);
@@ -61,8 +58,8 @@ impl Physics {
         let mut rb =
           RigidBody::new_dynamic(shape, density, restitution, friction);
         rb.append_translation(&Translation2::new(init_x, init_y));
-        rb.set_user_data(Some(Box::new(Player::new())));
-        world.add_rigid_body(rb);
+        let player_body = world.add_rigid_body(rb);
+        Player::new(player_body)
     }
 
     pub fn update(&self, dt : f64, dx : f64, jump : bool) {
@@ -70,23 +67,19 @@ impl Physics {
     }
 
     pub fn draw(&self, viewport : &Viewport, gl : &mut GlGraphics) {
-        for body in self.world.rigid_bodies() {
-            let body : &RigidBody<f64> = &match Rc::get_mut(body) {
-                Ok(b) => b,
-                Err(_) => continue,
-            }.into_inner();
-            gl.draw(*viewport, |context, ref mut gl| {
-                match body.user_data() {
-                    Some(drawable) => {
-                        let drawable : &Any = drawable.borrow();
-                        if ((*drawable).is::<Player>()) {
-                            let player : &Player = (*drawable).downcast_ref().unwrap();
-                            player.draw(&body, &context, &mut gl);
-                        }
-                    }
-                    None => (),
-                }
-            });
-        }
+        gl.draw(*viewport, |context, ref mut gl| {
+            self.player.draw(&context, gl);
+        });
+        //for ref body in self.world.rigid_bodies() {
+        //    let body : &RigidBody<f64> = &match Rc::try_unwrap(body.clone()) {
+        //        Ok(b) => b,
+        //        Err(_)=> continue,
+        //    }.into_inner();
+        //    if body.can_move() {
+        //        gl.draw(*viewport, |context, ref mut gl| {
+        //            Player::draw(&body, &context, &mut gl);
+        //        });
+        //    }
+        //}
     }
 }
