@@ -14,13 +14,13 @@ use piston::event_loop::*;
 use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
+use graphics::color::BLACK;
 
 mod player;
 mod physics;
 use physics::Physics;
 mod draw;
 
-const BLACK : [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 
 pub struct App {
     gl: GlGraphics,
