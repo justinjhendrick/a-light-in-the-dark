@@ -2,11 +2,11 @@ use std::rc::Rc;
 use std::cell::{Ref, RefCell};
 use std::borrow::Borrow;
 
-use nalgebra::{normalize, Point2, Translation2, Vector2};
+use nalgebra::{Point2, Translation2, Vector2, Isometry2};
 use ncollide::shape::{Ball, Cuboid, Shape2};
 use ncollide::query::{Ray, RayCast};
 use nphysics2d::world::World;
-use nphysics2d::object::RigidBody;
+use nphysics2d::object::{RigidBody, Sensor};
 
 use opengl_graphics::GlGraphics;
 use graphics::{rectangle, Context, Transformed, Viewport};
@@ -27,7 +27,7 @@ pub struct Physics {
 impl Physics {
     pub fn new() -> Physics {
         let mut world = World::new();
-        world.set_gravity(Vector2::new(0.0, 9.81));
+        world.set_gravity(Vector2::new(0.0, 500.0));
         Physics::add_static_bodies(&mut world);
         let player = Physics::add_player(&mut world);
         Physics { world, player }
@@ -63,26 +63,39 @@ impl Physics {
         world.add_rigid_body(floor);
 
         let mut left_wall = RigidBody::new_static(
-            Cuboid::new(Vector2::new(1.0, HEIGHT / 2.0)),
+            Cuboid::new(Vector2::new(2.0, HEIGHT / 2.0)),
             restitution,
             friction,
         );
-        left_wall.append_translation(&Translation2::new(3.0, HEIGHT / 2.0));
+        left_wall.append_translation(&Translation2::new(5.0, HEIGHT / 2.0));
         world.add_rigid_body(left_wall);
+
+        let mut platform = RigidBody::new_static(
+            Cuboid::new(Vector2::new(WIDTH / 8.0, 10.0)),
+            restitution,
+            friction,
+        );
+        platform.append_translation(&Translation2::new(WIDTH / 2.0, HEIGHT * 4.0 / 5.0));
+        world.add_rigid_body(platform);
     }
 
     fn add_player(world: &mut World<f64>) -> Player {
         let init_x = WIDTH / 2.0;
         let init_y = HEIGHT / 2.0;
-        let shape = Ball::new(SIZE);
         let density = 0.1;
         let restitution = 0.3;
         let friction = 1.2;
 
-        let mut rb = RigidBody::new_dynamic(shape, density, restitution, friction);
+        let mut rb = RigidBody::new_dynamic(Ball::new(SIZE), density, restitution, friction);
         rb.append_translation(&Translation2::new(init_x, init_y));
-        let player_body = world.add_rigid_body(rb);
-        Player::new(player_body)
+        let player_body_handle = world.add_rigid_body(rb);
+        let mut sensor = Sensor::new(Ball::new(10.0 * SIZE), Some(player_body_handle.clone()));
+        sensor.set_relative_position(Isometry2::new(Vector2::new(0.0, 0.0), 0.0));
+        let sensor_handle = world.add_sensor(sensor);
+        Player {
+            body: player_body_handle,
+            sensor: sensor_handle,
+        }
     }
 
     pub fn update(&mut self, dt: f64, dx: f64, jump: bool) {
@@ -94,7 +107,6 @@ impl Physics {
         gl.draw(*viewport, |context, ref mut gl| {
             self.player.draw(&context, gl);
 
-            let mouse_position = Vector2::new(WIDTH / 2.0, HEIGHT / 2.0);
             self.draw_rays(&context, gl, cursor_x, cursor_y);
         });
     }

@@ -35,6 +35,8 @@ impl App {
             gl,
             down_keys: HashSet::new(),
             physics: Physics::new(),
+            cursor_x: 0.0,
+            cursor_y: 0.0,
         }
     }
 
@@ -98,8 +100,8 @@ fn main() {
             _ => (),
         }
         e.mouse_cursor(|x, y| {
-            cursor_x = x;
-            cursor_y = y;
+            app.cursor_x = x;
+            app.cursor_y = y;
         });
     }
 }
