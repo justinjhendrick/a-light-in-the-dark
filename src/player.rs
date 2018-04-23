@@ -35,14 +35,20 @@ impl Player {
     fn can_jump(&self) -> bool {
         let sensor = Physics::borrow_handle(&self.sensor);
         let pos = sensor.position();
-        println!("sensor position {:?}", pos);
-        let bodies = sensor.interfering_bodies();
-        !bodies.is_empty()
+        println!("sensor position {:?}", pos.translation);
+        match sensor.interfering_bodies() {
+            Some(bodies) => {
+                println!("bodies is {} long", bodies.len());
+                bodies.len() > 0
+            }
+            None => false,
+        }
     }
 
     pub fn mov(&mut self, dx: f64, jump: bool) {
+        let jump = jump && self.can_jump();
         let body = &mut *self.body.borrow_mut();
-        if self.can_jump() && jump {
+        if jump {
             body.apply_central_impulse(Vector2::new(0.0, -700.0));
         } 
         let dy = body.lin_vel()[1];

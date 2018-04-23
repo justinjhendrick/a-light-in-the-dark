@@ -89,8 +89,8 @@ impl Physics {
         let mut rb = RigidBody::new_dynamic(Ball::new(SIZE), density, restitution, friction);
         rb.append_translation(&Translation2::new(init_x, init_y));
         let player_body_handle = world.add_rigid_body(rb);
-        let mut sensor = Sensor::new(Ball::new(10.0 * SIZE), Some(player_body_handle.clone()));
-        sensor.set_relative_position(Isometry2::new(Vector2::new(0.0, 0.0), 0.0));
+        let mut sensor = Sensor::new(Ball::new(2.0 * SIZE), Some(player_body_handle.clone()));
+        sensor.enable_interfering_bodies_collection();
         let sensor_handle = world.add_sensor(sensor);
         Player {
             body: player_body_handle,
